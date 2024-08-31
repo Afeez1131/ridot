@@ -10,6 +10,8 @@ from knox.views import LoginView as KnoxLoginView
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from rest_framework import pagination
 
 from api.permissions import IsAuthenticatedAdminOrAuthorOrReadOnly
@@ -19,15 +21,64 @@ from api import serializers
 
 class BlogViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows blog post to be created, viewed or edited.
-    /api/blog/
+    API endpoint that allows blog posts to be created, viewed, or edited.
 
+    retrieve:
+    Retrieve a specific blog post by its ID.
+
+    list:
+    Retrieve a list of all blog posts.
+
+    create:
+    Create a new blog post. The authenticated user is set as the author.
+
+    update:
+    Update a specific blog post by its ID. Only the author or an admin can update the blog post.
+
+    partial_update:
+    Partially update a specific blog post by its ID. Only the author or an admin can update the blog post.
+
+    destroy:
+    Delete a specific blog post by its ID. Only the author or an admin can delete the blog post.
     """
     queryset = Blog.objects.all()
     serializer_class = serializers.BlogSerializer
     permission_classes = [IsAuthenticatedAdminOrAuthorOrReadOnly]
 
+    def list(self, request, *args, **kwargs):
+        """
+        Retrieve a list of all blog posts.
+        """
+        return super().list(request, *args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new blog post.
+        """
+        return super().create(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Retrieve a specific blog post by its ID.
+        """
+        return super().retrieve(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Update a specific blog post.
+        """
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete a specific blog post.
+        """
+        return super().destroy(request, *args, **kwargs)
+
     def perform_create(self, serializer):
+        """
+        Override the default perform_create to set the request user as the author.
+        """
         serializer.save(author=self.request.user)
 
 
