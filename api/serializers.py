@@ -1,4 +1,5 @@
 import bleach
+from bleach.css_sanitizer import CSSSanitizer
 from django.core.validators import validate_email
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -50,11 +51,6 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Last name must be alphabetic')
         return value
 
-    def validate_content(self, value):
-        # Optional: Sanitize the HTML to ensure no harmful scripts are included
-        allowed_tags = ['p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'br', 'img']
-        allowed_attrs = {'a': ['href', 'title'], 'img': ['src', 'alt']}
-        return bleach.clean(value, tags=allowed_tags, attributes=allowed_attrs)
 
     def create(self, validated_data):
         user = User.objects.create_user(
@@ -75,6 +71,44 @@ class BlogSerializer(serializers.ModelSerializer):
         model = Blog
         fields = ['pk', 'author', 'title', 'content', 'created', 'updated']
         read_only_fields = ['pk', 'author', 'created', 'updated']
+
+    def validate_content(self, value):
+        # Optional: Sanitize the HTML to ensure no harmful scripts are included
+        # Define allowed HTML tags
+        allowed_tags = [
+            'p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'br', 'img', 'blockquote',
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'code', 'pre', 'span', 'div', 'b', 'i', 'u'
+        ]
+
+        # Define allowed attributes for each tag
+        allowed_attrs = {
+            'a': ['href', 'title', 'rel', 'target'],
+            'img': ['src', 'alt', 'title', 'width', 'height'],
+            'p': ['style'],
+            'span': ['style'],
+            'div': ['style'],
+            '*': ['class'],  # Allow 'class' attribute on any tag
+        }
+        # Create a CSSSanitizer instance to define allowed CSS properties
+        css_sanitizer = CSSSanitizer(allowed_css_properties=[
+            'color', 'font-weight', 'font-size', 'text-align', 'background-color', 'margin', 'padding',
+            'border', 'width', 'height', 'display'
+        ])
+        # Define allowed protocols to avoid `javascript:` or `data:` exploits
+        allowed_protocols = ['http', 'https', 'mailto']
+
+        # Clean the HTML input using Bleach
+        clean_value = bleach.clean(
+            value,
+            tags=allowed_tags,
+            attributes=allowed_attrs,
+            protocols=allowed_protocols,
+            strip=True,  # Removes any disallowed HTML rather than escaping it
+            css_sanitizer=css_sanitizer
+        )
+        print(value)
+        print('\n: ', clean_value)
+        return clean_value
 
 
 class LoginSerializer(serializers.Serializer):
