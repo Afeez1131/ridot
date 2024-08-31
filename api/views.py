@@ -10,16 +10,22 @@ from knox.views import LoginView as KnoxLoginView
 from rest_framework.authtoken.serializers import AuthTokenSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import pagination
 
-from api.permissions import IsAuthorOrReadOnly
+from api.permissions import IsAuthenticatedAdminOrAuthorOrReadOnly
 from core.models import Blog
 from api import serializers
 
 
 class BlogViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows blog post to be created, viewed or edited.
+    /api/blog/
+
+    """
     queryset = Blog.objects.all()
     serializer_class = serializers.BlogSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsAuthorOrReadOnly]
+    permission_classes = [IsAuthenticatedAdminOrAuthorOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -69,5 +75,6 @@ class ListUsersViewset(viewsets.ReadOnlyModelViewSet):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 ListUsersView = ListUsersViewset.as_view({'get': 'list'})

@@ -8,10 +8,10 @@ router = DefaultRouter()
 router.register(r'blog', views.BlogViewSet, basename='blog')
 
 urlpatterns = [
-    path('login', views.LoginViewSet.as_view(), name='knox_login'),
-    path('logout', knox_views.LogoutView.as_view(), name='know_logout'),
-    path('logout/all', knox_views.LogoutAllView.as_view(), name='know_logout_all'),
-    path('users', views.ListUsersView, name='list_users'),
-    path('register', views.RegisterUserView.as_view(), name='register'),
+    path('login/', views.LoginViewSet.as_view(), name='knox_login'),
+    path('logout/', knox_views.LogoutView.as_view(), name='know_logout'),
+    path('logout/all/', knox_views.LogoutAllView.as_view(), name='know_logout_all'),
+    path('users/', views.ListUsersView, name='list_users'),
+    path('register/', views.RegisterUserView.as_view(), name='register'),
     path('', include(router.urls)),
 ]

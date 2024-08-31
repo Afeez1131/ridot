@@ -5,3 +5,6 @@ __pycache__
 .idea/misc.xml
 .idea/ridot.iml
 .idea/workspace.xml
+migrations/*
+*/migrations/*
+!*/migrations/__init__.py

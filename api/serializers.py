@@ -1,3 +1,4 @@
+import bleach
 from django.core.validators import validate_email
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -49,6 +50,12 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Last name must be alphabetic')
         return value
 
+    def validate_content(self, value):
+        # Optional: Sanitize the HTML to ensure no harmful scripts are included
+        allowed_tags = ['p', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'br', 'img']
+        allowed_attrs = {'a': ['href', 'title'], 'img': ['src', 'alt']}
+        return bleach.clean(value, tags=allowed_tags, attributes=allowed_attrs)
+
     def create(self, validated_data):
         user = User.objects.create_user(
             email=validated_data['email'],
@@ -61,7 +68,8 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class BlogSerializer(serializers.ModelSerializer):
-    author = serializers.PrimaryKeyRelatedField(read_only=True)
+    # author = serializers.PrimaryKeyRelatedField(read_only=True)
+    author = UserSerializer(read_only=True)
 
     class Meta:
         model = Blog
